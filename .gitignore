@@ -1,0 +1,15 @@
+# MATLAB temporary files
+*.asv
+*.m~
+*.mex*
+slprj/
+*.slxc
+
+# Simulink cache files
+*.slxc
+
+# Autosave files
+*.autosave
+
+# Generated code
+codegen/
