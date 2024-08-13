@@ -189,6 +189,11 @@ for i = 1:length(scenario_data)
 end
 legend(cellfun(@(x,y) sprintf('%s (%dV)', x.scenario, x.voltage), scenario_data, 'UniformOutput', false));
 
+%% Save time domain plots
+set(gcf, 'Position', get(0, 'Screensize'));  % Maximize figure window
+saveas(gcf, fullfile(resultsDir, 'time_domain_plots.fig'));
+saveas(gcf, fullfile(resultsDir, 'time_domain_plots.png'));
+
 %% Perform FFT on vibration data and plot
 for v = 1:length(voltage_levels)
     figure('Name', sprintf('Frequency Spectrum - %dV', voltage_levels(v)));
@@ -218,14 +223,8 @@ for v = 1:length(voltage_levels)
     % Adjust subplot spacing
     sgtitle(sprintf('Frequency Spectrum - %dV', voltage_levels(v)));
     set(gcf, 'Position', get(0, 'Screensize'));  % Maximize figure window
-end
 
-%% Save time domain plots
-saveas(gcf, fullfile(resultsDir, 'time_domain_plots.fig'));
-saveas(gcf, fullfile(resultsDir, 'time_domain_plots.png'));
-
-% Save frequency domain plots
-for v = 1:length(voltage_levels)
+    % Save frequency domain plots
     saveas(gcf, fullfile(resultsDir, sprintf('frequency_spectrum_%dV.fig', voltage_levels(v))));
     saveas(gcf, fullfile(resultsDir, sprintf('frequency_spectrum_%dV.png', voltage_levels(v))));
 end
