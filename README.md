@@ -9,4 +9,5 @@ This project simulates a standing fan using MATLAB/Simulink for predictive maint
 
 ## Usage
 1. Ensure MATLAB and required toolboxes are installed.
-2. Run `main.m` script to execute the entire simulation process.
+2. At project root folder, run `main.m` script to execute the entire simulation process (with command `run('scripts/main.m')`).
+
