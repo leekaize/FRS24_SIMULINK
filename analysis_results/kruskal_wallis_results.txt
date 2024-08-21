@@ -1,0 +1,16 @@
+Kruskal-Wallis Test Results:
+RMS: p-value = 2.162284e-02
+Peak-to-Peak: p-value = 4.987053e-02
+Kurtosis: p-value = 7.696643e-02
+Crest Factor: p-value = 4.873698e-02
+Shape Factor: p-value = 6.271109e-02
+Impulse Factor: p-value = 4.444840e-02
+Freq1: p-value = 7.189777e-02
+Freq2: p-value = 1.556440e-02
+Freq3: p-value = 5.466668e-02
+Mag1: p-value = 6.563922e-02
+Mag2: p-value = 7.028108e-02
+Mag3: p-value = 9.432576e-02
+Central Freq: p-value = 6.415897e-02
+RMS Freq: p-value = 2.587086e-01
+Freq Variance: p-value = 2.935754e-01

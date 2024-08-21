@@ -1,6 +1,3 @@
-% Get the project root directory
-projectRoot = fileparts(fileparts(mfilename('fullpath')));
-
 %% Get the project root directory
 projectRoot = fileparts(fileparts(mfilename('fullpath')));
 
@@ -21,6 +18,7 @@ end
 
 %% Add paths
 addpath(fullfile(projectRoot, 'scripts'));
+addpath(fullfile(projectRoot, 'results'));
 addpath(fullfile(projectRoot, 'models'));
 
 % Change to project root directory
