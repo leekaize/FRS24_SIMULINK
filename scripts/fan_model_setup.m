@@ -1,6 +1,7 @@
 %% fan_model_setup.m
+
 %% Create new Simulink model
-model = 'fan_predictive_maintenance';
+model = 'fan_model';
 open_system(new_system(model));
 
 %% Create a subsystem for the fan components
@@ -124,39 +125,35 @@ add_block('simulink/Ports & Subsystems/Out1', [model '/Fan System/Vibration Gene
 
 %% Speed-Vibration Function
 add_block('simulink/User-Defined Functions/MATLAB Function', [model '/Fan System/Vibration Generator/Speed Vibration Function']);
-add_line([model '/Fan System/Vibration Generator'], 'Speed Input/1', 'Speed Vibration Function/1', 'autorouting', 'on');
+add_block('simulink/Sources/Constant', [model '/Fan System/Vibration Generator/Blade Imbalance']);
+add_block('simulink/Sources/Constant', [model '/Fan System/Vibration Generator/Loose Blade']);
 
+% Load the MATLAB function script from the external file
+scriptText = fileread('speedVibrationFcn.m');
 config = get_param([model '/Fan System/Vibration Generator/Speed Vibration Function'], ...
     "MATLABFunctionConfiguration");
-
-% Define the MATLAB Function
-speedVibrationFcn = [
-'function vibration = fcn(speed)' newline ...
-'    persistent t' newline ...
-'    if isempty(t)' newline ...
-'        t = 0;' newline ...
-'    else' newline ...
-'        t = t + 0.01; % Assuming a fixed step size of 0.01s' newline ...
-'    end' newline ...
-'    freq = speed / (2*pi);' newline ...
-'    vibration = 0.1 * sin(2*pi*freq*t);' newline ...
-'end'];
-
-config.FunctionScript = speedVibrationFcn;
+config.FunctionScript = scriptText;
 config.UpdateMethod = "Discrete";
 config.SampleTime = "0.001";
+
+add_line([model '/Fan System/Vibration Generator'], 'Speed Input/1', 'Speed Vibration Function/1', 'autorouting', 'on');
+add_line([model '/Fan System/Vibration Generator'], 'Blade Imbalance/1', 'Speed Vibration Function/2', 'autorouting', 'on');
+add_line([model '/Fan System/Vibration Generator'], 'Loose Blade/1', 'Speed Vibration Function/3', 'autorouting', 'on');
+
+set_param([model '/Fan System/Vibration Generator/Blade Imbalance'], 'Value', '0.1');
+set_param([model '/Fan System/Vibration Generator/Loose Blade'], 'Value', '0');
 
 % Set the block description
 config.Description = 'Generate speed-dependent vibration';
 
 %% Add natural frequency vibration
 add_block('simulink/Sources/Sine Wave', [model '/Fan System/Vibration Generator/Natural Frequency']);
-set_param([model '/Fan System/Vibration Generator/Natural Frequency'], 'Frequency', '50'); % Adjust as needed
-set_param([model '/Fan System/Vibration Generator/Natural Frequency'], 'Amplitude', '0.05'); % Adjust as needed
+set_param([model '/Fan System/Vibration Generator/Natural Frequency'], 'Frequency', '50'); % Assuming natural frequency of 50Hz
+set_param([model '/Fan System/Vibration Generator/Natural Frequency'], 'Amplitude', '0.05');
 
 %% Add random vibration
 add_block('simulink/Sources/Band-Limited White Noise', [model '/Fan System/Vibration Generator/Random Vibration']);
-set_param([model '/Fan System/Vibration Generator/Random Vibration'], 'Cov', '0.01'); % Adjust as needed
+set_param([model '/Fan System/Vibration Generator/Random Vibration'], 'Cov', '0.01');
 
 %% Add sum block to combine vibrations
 add_block('simulink/Math Operations/Sum', [model '/Fan System/Vibration Generator/Total Vibration']);
@@ -183,9 +180,6 @@ add_block('simulink/Sinks/To Workspace', [model '/Vibration Data']);
 add_line(model, 'Fan System/4', 'Vibration Scope/1', 'autorouting', 'on');
 add_line(model, 'Fan System/4', 'Vibration Data/1', 'autorouting', 'on');
 
-% Configure vibration data workspace output
-set_param([model '/Vibration Data'], 'VariableName', 'vibration');
-
 %% RPM Display
 add_block('simulink/Math Operations/Gain', [model '/RPM Conversion']);
 set_param([model '/RPM Conversion'], 'Gain', '60/(2*pi)');
@@ -197,14 +191,29 @@ add_line(model, 'RPM Conversion/1', 'RPM Scope/1', 'autorouting', 'on');
 
 %% Set simulation parameters
 set_param(model, 'StopTime', '30');  % Extend simulation time to 30 seconds
-set_param(model, 'Solver', 'ode23t');
-set_param(model, 'RelTol', '1e-4');
-set_param(model, 'AbsTol', '1e-4');
+set_param(model, 'Solver', 'ode23t');  % Choose an efficient continuous solver
+set_param(model, 'MaxStep', '0.001');  % Increase MaxStep to reduce computational load
+set_param(model, 'RelTol', '1e-3');  % Adjust relative tolerance for performance
+set_param(model, 'AbsTol', '1e-4');  % Adjust absolute tolerance
+
+% Configure To Workspace blocks
+set_param([model '/Voltage Data'], 'SampleTime', '0.001');
+set_param([model '/Current Data'], 'SampleTime', '0.001');
+set_param([model '/Speed Data'], 'SampleTime', '0.001');
+set_param([model '/Vibration Data'], 'SampleTime', '0.001');
+
+% Use Parallel Computing Toolbox
+% delete(gcp('nocreate'))
+% parpool('local', 4);  % Adjust the number of workers based on your system
+
+% Set the simulation target language to C++
+set_param(model, 'SimTargetLang', 'C++');
 
 % Configure To Workspace blocks
 set_param([model '/Voltage Data'], 'VariableName', 'voltage');
 set_param([model '/Current Data'], 'VariableName', 'current');
 set_param([model '/Speed Data'], 'VariableName', 'speed');
+set_param([model '/Vibration Data'], 'VariableName', 'vibration');
 
 % Arrange blocks
 Simulink.BlockDiagram.arrangeSystem([model '/Fan System/Vibration Generator']);
